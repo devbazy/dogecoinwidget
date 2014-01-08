@@ -109,7 +109,7 @@ public final class DogeChainApi
 			// finished using it.
 		} catch (IOException ioe)
 		{
-			
+			ioe.printStackTrace();
 		} finally
 		{
 			if (is != null)
@@ -123,6 +123,6 @@ public final class DogeChainApi
 				}
 			}
 		}
-		return null;
+		return "0";
 	}
 }

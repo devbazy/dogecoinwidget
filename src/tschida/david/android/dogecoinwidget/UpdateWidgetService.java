@@ -73,6 +73,8 @@ public class UpdateWidgetService extends Service
 		
 		AppWidgetManager appWidgetManager = AppWidgetManager
 				.getInstance(UpdateWidgetService.this.getApplicationContext());
+		if(allWidgetIds == null)
+			allWidgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
 		for (int widgetId : allWidgetIds)
 		{
 			RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
@@ -81,24 +83,27 @@ public class UpdateWidgetService extends Service
 			
 			remoteViews.setTextViewText(R.id.pool, "Total: " + totalBalance);
 			
-			// Register an onClickListener
-			Intent clickIntent = new Intent(this.getApplicationContext(),
-					MyWidgetProvider.class);
-			
+			Intent clickIntent = new Intent(context, UpdateWidgetService.class);
+	        
 			clickIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
 			clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS,
 					allWidgetIds);
 			
-			PendingIntent pendingIntent = PendingIntent.getBroadcast(
-					getApplicationContext(), 0, clickIntent,
-					PendingIntent.FLAG_UPDATE_CURRENT);
-			remoteViews.setOnClickPendingIntent(R.id.pool, pendingIntent);
+			PendingIntent pendingIntent = PendingIntent.getService(context, 0, clickIntent, 0);
+			Log.d(TAG, "Pending Intent = " + pendingIntent.toString());
+			remoteViews.setOnClickPendingIntent(R.id.layout, pendingIntent);
+			
 			appWidgetManager.updateAppWidget(widgetId, remoteViews);
 		}
 		
 		RemoteViews remoteViews = new RemoteViews(getApplicationContext()
 				.getPackageName(), R.layout.widget_layout);
 		remoteViews.setViewVisibility(R.id.progress, View.INVISIBLE);
+		
+		for(int id : allWidgetIds)
+		{
+			appWidgetManager.updateAppWidget(id, remoteViews);
+		}
 		
 		LocalBroadcastManager.getInstance(this).unregisterReceiver(
 				mMessageReceiver);
@@ -137,11 +142,28 @@ public class UpdateWidgetService extends Service
 		}
 		addresses = addr.toArray(new String[1]);
 		
+		
+		//Logging...
+		String logStr = "{ ";
+		for(String s : addresses)
+		{
+			logStr += s + ", ";
+		}
+		Log.e(TAG, "\n\n\n" + logStr + " }\n\n\n");
+		//end logging
+		
 		RemoteViews remoteViews = new RemoteViews(getApplicationContext()
 				.getPackageName(), R.layout.widget_layout);
 		
 		remoteViews.setViewVisibility(R.id.progress, View.VISIBLE);
 		remoteViews.setProgressBar(R.id.progress, addresses.length, 0, true);
+		
+		AppWidgetManager appWidgetManager = AppWidgetManager
+				.getInstance(UpdateWidgetService.this.getApplicationContext());
+		for(int id : allWidgetIds)
+		{
+			appWidgetManager.updateAppWidget(id, remoteViews);
+		}
 		
 		if (task == null)
 		{
